@@ -3,12 +3,16 @@ require 'set'
 input = File.open("input").read.lines.map(&:to_i)
 puts "part1 #{input.reduce(:+)}"
 
-val = 0
-set = Set.new([val])
-0.step.each do |i|
+0.step.inject([Set.new([0]), 0]) do |(set, val), i|
   index = i % input.size
   val = val + input[index]
-  if set.member? val; puts "part2 #{val}"; exit; end
-  set << val
+
+  if set.member? val
+    puts "part2 #{val}"
+    exit
+  else
+    set << val
+    [set, val]
+  end
 end
 

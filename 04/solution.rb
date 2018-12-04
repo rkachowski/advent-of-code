@@ -28,7 +28,7 @@ end
 
 guard_sleep_times = times.group_by {|c| c[:id]}
 total_sleeping = guard_sleep_times.transform_values do |entries|
-  entries.map{|e| e[:sleeps]}.compact.reduce(0) { |sum, range| sum + range.size }
+  entries.map{|e| e[:sleeps]}.flatten.compact.reduce(0) { |sum, range| sum + range.size }
 end
 
 laziest_bastard = total_sleeping.key(total_sleeping.values.max)

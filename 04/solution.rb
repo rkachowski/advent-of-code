@@ -32,7 +32,23 @@ total_sleeping = guard_sleep_times.transform_values do |entries|
 end
 
 laziest_bastard = total_sleeping.key(total_sleeping.values.max)
-minutes_asleep = guard_sleep_times[laziest_bastard].map{ |e| e[:sleeps].map(&:to_a)}
-  .flatten.each_with_object(Hash.new(0)){|m,t| t[m] += 1}
 
-puts minutes_asleep.key(minutes_asleep.values.max) * laziest_bastard
+minutes_asleep = guard_sleep_times.transform_values do |entries|
+  sleep_times = entries.map {|e| e[:sleeps]}.flatten.compact
+  all_minutes = sleep_times.map(&:to_a).flatten
+  all_minutes.each_with_object(Hash.new(0)){|m,t| t[m] += 1}
+end
+
+puts minutes_asleep[laziest_bastard].key(minutes_asleep[laziest_bastard].values.max) * laziest_bastard
+
+consistent_napper = minutes_asleep.inject([0,0,0]) { |(max_id, max, mins), (id,vals)|  
+  if !vals.empty? && vals.values.max > max
+    max = vals.values.max
+    max_id = id
+    mins = vals.key(max)
+  end
+
+  [max_id, max,mins]
+}
+
+puts consistent_napper[0] * consistent_napper[2]

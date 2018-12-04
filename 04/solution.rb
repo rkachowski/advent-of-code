@@ -41,14 +41,14 @@ end
 
 puts minutes_asleep[laziest_bastard].key(minutes_asleep[laziest_bastard].values.max) * laziest_bastard
 
-consistent_napper = minutes_asleep.inject([0,0,0]) { |(max_id, max, mins), (id,vals)|  
-  if !vals.empty? && vals.values.max > max
-    max = vals.values.max
+id, _, sleeping_minute = minutes_asleep.inject([0,0,0]) { |(max_id, max_count, minute), (id,minute_map)|  
+  if !minute_map.empty? && minute_map.values.max > max_count
+    max_count = minute_map.values.max
     max_id = id
-    mins = vals.key(max)
+    minute = minute_map.key(max_count)
   end
 
-  [max_id, max,mins]
+  [max_id, max_count,minute]
 }
 
-puts consistent_napper[0] * consistent_napper[2]
+puts id * sleeping_minute

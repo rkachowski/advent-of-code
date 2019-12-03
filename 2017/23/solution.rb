@@ -1,6 +1,8 @@
 input = File.open("input").read.lines.map{|l| l.split(" ")}
+require 'pry-byebug'
 
 class Coprocessor
+  attr_writer :a
   def initialize program
     @program = program
     @a = 0
@@ -29,6 +31,9 @@ class Coprocessor
   end
 
   def sub r, v
+    if r == 'h'
+      binding.pry
+    end
     instance_variable_set :"@#{r}", get_value(r) - get_value(v)
     @ic += 1
   end
@@ -46,8 +51,8 @@ class Coprocessor
       self.send @program[@ic][0],  *@program[@ic][1..]
 
       if (@ic >= (@program.size - 1)) then
-        puts "end encountered - #{@mul_count} muls"
-        exit
+        puts "end encountered - #{@mul_count} muls h = #{@h}"
+        break
       end
     end
   end
@@ -62,5 +67,8 @@ class Coprocessor
 end
 
 p = Coprocessor.new input
+p.run
 
+p = Coprocessor.new input
+p.a = 1
 p.run

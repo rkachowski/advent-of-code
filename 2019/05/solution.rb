@@ -1,8 +1,9 @@
-input = File.open("input").read.chomp.split(",").map(&:to_i)
-
-@exit = false
-@input = []
-@output = []
+def reset
+  @input = []
+  @output = []
+  @exit = false
+  @code = File.open("input").read.chomp.split(",").map(&:to_i)
+end
 
 @position = ->(arr,i){ arr[arr[i]] }
 @immediate = ->(arr,i){ arr[i] }
@@ -24,7 +25,6 @@ input = File.open("input").read.chomp.split(",").map(&:to_i)
   99 => ->(arr, i, _){ @exit = true; 1 }
 }
 
-
 def get_modes value
   modes = (value / 100).to_s.chars
 
@@ -39,32 +39,29 @@ def get_modes value
   modes.reverse.map {|f| @modes[f.to_i]}
 end
 
-def run inp
+def run code, inval
+  @input.push inval
   position = 0
 
   loop do
-    value = inp[position]
+    value = code[position]
 
     opcode = value % 100
     func = @opcodes[opcode]
 
     modes = get_modes(value)
-    ip_inc = func.(inp,position, modes)
+    ip_inc = func.(code, position, modes)
 
     break if @exit
     position += ip_inc
   end
 
-  inp[0]
+  code[0]
+  puts @output.inspect
 end
 
-@input.push 1
-run input
+reset
+run @code, 1
 
-puts @output.inspect
-
-@input = [5]
-@output = []
-run input
-
-puts @output.inspect
+reset
+run @code, 5

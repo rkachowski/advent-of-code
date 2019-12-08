@@ -1,4 +1,3 @@
-require 'pry-byebug'
 require "ostruct"
 
 file = "input"
@@ -41,3 +40,33 @@ end
 
 puts @map.values.sum {|n| root_distance(n)}
 
+def all_children node
+  return [] unless node.children.size > 0
+  
+  (node.children + node.children.map {|c| all_children(c)}).flatten.uniq
+end
+
+
+
+def find_common_parent n1, n2
+  parents = {}
+  nodes  = [n1.parent, n2.parent]
+
+  loop do
+    nodes.map! do |n_p|
+      if parents[n_p.name]
+        return parents[n_p.name]
+      else
+        parents[n_p.name] = n_p
+      end
+      n_p ? n_p.parent : nil
+    end
+
+    nodes.compact!
+  end
+end
+
+you, santa = @map["YOU"], @map["SAN"]
+common_ancestor = find_common_parent you, santa
+
+puts (root_distance(you) - root_distance(common_ancestor) - 1) + (root_distance(santa) - root_distance(common_ancestor) - 1)

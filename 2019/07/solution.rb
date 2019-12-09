@@ -1,4 +1,3 @@
-require 'pry-byebug'
 input = File.open("input").read.chomp.split(",").map(&:to_i)
 
 class Intcode
@@ -26,8 +25,13 @@ class Intcode
     }
   end
 
-  def initialize
+  def initialize code
+    @code = code
     reset
+  end
+
+  def finished?
+    @exit
   end
 
   def reset
@@ -36,6 +40,7 @@ class Intcode
     @exit = false
 
     setup_machine
+    @ip = 0
   end
 
 
@@ -53,29 +58,28 @@ class Intcode
     modes.reverse.map {|f| @modes[f.to_i]}
   end
 
-  def run code
-    position = 0
+  def run
 
     loop do
-      value = code[position]
+      value = @code[@ip]
 
       opcode = value % 100
       func = @opcodes[opcode]
 
       modes = get_modes(value)
-      ip_inc = func.(code, position, modes)
+      ip_inc = func.(@code, @ip, modes)
 
-      position += ip_inc
+      @ip += ip_inc
       break if @exit || @output.size > 0
     end
 
-    code[0]
+    @code[0]
   end
 end
 
 codes = (0..4).to_a.permutation.to_a
 
-machine = Intcode.new
+machine = Intcode.new input.clone
 
 results = codes.map do |code|
   code.inject(0) do |inp2, inp|
@@ -84,7 +88,7 @@ results = codes.map do |code|
     machine.input << inp2
     machine.input << inp
 
-    machine.run input.clone
+    machine.run 
 
     machine.output.first
   end
@@ -94,25 +98,25 @@ end
 
 puts results.max
 
-#need 5 instances of the machine
-#pass values across upon output and stop when all is halted
-exit
-codes = (5..9).to_a.permutation.to_a
+codes = (5..9).to_a.permutation.to_a.map do |code|
+  machines = code.map { |c| m = Intcode.new(input.clone) ; m.input << c; m}
 
-machine = Intcode.new
+  v = 0
+  loop do
+    break if machines.all? {|m| m.finished?}
 
-iv = 0
-results = codes.map do |code|
-  code.inject(iv) do |inp2, inp|
-    machine.reset
+    machines.each_with_index do |m, i|
+      continue if m.finished?
+      
+      m.input.unshift v
+      m.run
 
-    machine.input << inp2
-    machine.input << inp
+      v = m.output.pop unless m.output.empty?
+    end
 
-    machine.run input.clone
-
-    machine.output.pop
   end
 
-  iv = machine.output.first
+  v
 end
+
+puts codes.max

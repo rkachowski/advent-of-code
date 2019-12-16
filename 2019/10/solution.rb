@@ -79,4 +79,7 @@ asteroids = get_asteroids input
 
 scores = asteroids.map { |a| [num_visible(a, asteroids), a] }
 
-puts scores.max {|c,b| c[0] <=> b[0] }
+visible, location = scores.max {|c,b| c[0] <=> b[0] }
+puts visible
+
+#get the list of all visible, sorty by the angle and slowly remove them from the list until complete, then restart until get to 200

@@ -1,7 +1,7 @@
 require 'pry-byebug'
 require 'set'
 
-file = "input"
+file = "test2"
 input = File.open(file).read.lines.map {|l| l.chomp.chars }
 
 def iterate_grid grid, p=false
@@ -57,7 +57,7 @@ def cells p1, p2
 
   result
 end
-def num_visible asteroid, asteroids
+def visible asteroid, asteroids
 
   seen = Set.new
   asteroids.each do |other|
@@ -72,14 +72,20 @@ def num_visible asteroid, asteroids
     end
   end
 
-  seen.size
+  seen
+end
+
+def polar cart
+  [Math.sqrt( cart[0]**2 + cart[1]**2 ), Math.atan2(cart[1],cart[0])]
 end
 
 asteroids = get_asteroids input
 
-scores = asteroids.map { |a| [num_visible(a, asteroids), a] }
+scores = asteroids.map { |a| [visible(a, asteroids), a] }
 
-visible, location = scores.max {|c,b| c[0] <=> b[0] }
+visible, location = scores.max {|c,b| c[0].size <=> b[0].size}
+binding.pry
 puts visible
 
+polar = visible.to_a.map {|d| polar([d[0] - location[0],d[1] - location[1]]) + [d] }
 #get the list of all visible, sorty by the angle and slowly remove them from the list until complete, then restart until get to 200

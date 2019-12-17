@@ -1,7 +1,7 @@
 require 'pry-byebug'
 require 'set'
 
-file = "test2"
+file = "input"
 input = File.open(file).read.lines.map {|l| l.chomp.chars }
 
 def iterate_grid grid, p=false
@@ -84,8 +84,21 @@ asteroids = get_asteroids input
 scores = asteroids.map { |a| [visible(a, asteroids), a] }
 
 visible, location = scores.max {|c,b| c[0].size <=> b[0].size}
-binding.pry
-puts visible
 
 polar = visible.to_a.map {|d| polar([d[0] - location[0],d[1] - location[1]]) + [d] }
-#get the list of all visible, sorty by the angle and slowly remove them from the list until complete, then restart until get to 200
+sorted = polar.sort { |c,d| c[1] <=> d[1] }
+
+#move all points with angle < -pi/2 to the end of the array
+below_0 = sorted.each_with_index.inject([]) do | acc,(c,i)|
+  acc << i if c[1] < -(Math::PI / 2)
+  acc
+end
+
+i = below_0.max
+endpoints = sorted.slice!(0..i)
+sorted = sorted + endpoints
+
+_, _, targetast = sorted[199]
+puts "value = #{targetast[0] * 100 + targetast[1]}" 
+
+

@@ -1,4 +1,3 @@
-require 'pry-byebug'
 require 'set'
 
 file = "input"

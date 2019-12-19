@@ -12,7 +12,7 @@ class Code < Array
 end
 
 class Intcode
-  attr_accessor :input, :output, :relative_base, :break_on_output
+  attr_accessor :input, :output, :relative_base, :break_on_output, :yield_on_input
 
   def setup_machine
     @relative_base = 0
@@ -83,6 +83,11 @@ class Intcode
       value = @code[@ip]
 
       opcode = value % 100
+
+      if opcode == 3 && @yield_on_input && block_given?
+        yield
+      end
+
       func = @opcodes[opcode]
 
       modes = get_modes(value)
@@ -100,11 +105,14 @@ m = Intcode.new input.clone
 m.break_on_output = true
 
 output = []
+
+ball_position = []
+paddle_position = []
+
 loop do
   m.run
   if m.output.size == 3
     output << m.output.clone
-    puts m.output.inspect
     m.output.clear
   end
 
@@ -119,18 +127,29 @@ code[0] = 2
 
 m = Intcode.new code
 m.break_on_output = true
+m.yield_on_input = true
 
 output = []
 loop do
-  m.run
+  m.run do
+    if ball_position[0] < paddle_position[0]
+      m.input << -1 
+    elsif ball_position[0] > paddle_position[0]
+      m.input << 1 
+    else
+      m.input << 0 
+    end
+  end
+
   if m.output.size == 3
     output << m.output.clone
-    puts m.output.inspect
+
+    ball_position = m.output.clone if m.output[2] == 4
+    paddle_position = m.output.clone if m.output[2] == 3
     m.output.clear
   end
 
   break if m.finished?
 end
 
-binding.pry
-puts "yth"
+puts output.last[2]

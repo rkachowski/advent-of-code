@@ -9,6 +9,7 @@ defmodule Day1 do
             MapSet.new
 
         part1 input
+        part2 input
     end
 
     def part1(input) do
@@ -17,7 +18,21 @@ defmodule Day1 do
     end
 
     def part2(input) do
-     
+        Enum.reduce_while(input, input, fn i, acc ->
+            j = Enum.filter(acc, &(i + &1 < 2020))
+
+            result = Enum.find(j, :not_found, &(MapSet.member?(acc, abs(i + &1 - 2020))))
+
+            third = abs(i + result - 2020)
+
+            if result == :not_found do
+                {:cont, MapSet.delete(acc, i)}
+            else
+                IO.puts "#{i} - #{result} - #{third} - #{i * result * third}"
+
+                {:halt, "lol"}
+            end
+        end)
     end
 end
 

@@ -1,8 +1,7 @@
 defmodule Day5 do
   def parse do
-    {_, file} = File.read("input")
-
-    file
+    File.read("input")
+    |> elem(1)
     |> String.split("\n", trim: true)
   end
 

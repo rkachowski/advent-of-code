@@ -1,3 +1,4 @@
 {
-    "elixirLS.projectDir": "stupidmixfile"
+    "elixirLS.projectDir": "stupidmixfile",
+    "editor.formatOnSave": true
 }

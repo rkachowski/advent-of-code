@@ -14,8 +14,7 @@ defmodule Day4 do
 
     file
     |> String.split("\n\n", trim: true)
-    |> Enum.map(&String.split(&1, ~r{\s}, trim: true))
-    |> Enum.map(&passport_to_map/1)
+    |> Enum.map(&String.split(&1, ~r{\s}, trim: true) |> passport_to_map)
   end
 
   def solve do

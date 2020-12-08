@@ -26,23 +26,14 @@ defmodule Day7 do
     {bag, contents}
   end
 
-  def solve do
-    bags = parse()
 
-    get_bags(["shiny gold"], bags)
-    |> List.flatten
-    |> MapSet.new
-    |> Enum.count
-    |> IO.puts
-  end
-
-  def get_bags [], map do
+  def get_bags [], _ do
     []
   end
 
   def get_bags [colors | tail], map do
     c = containers(colors, map)
-    [c | [get_bags(c,map) | get_bags(tail, map)]]
+    [c | [get_bags(c,map) | get_bags(tail, map)]] |> List.flatten
   end
 
   def containers color, bags do
@@ -52,6 +43,34 @@ defmodule Day7 do
         {_, contentcolor} -> contentcolor == color end)
     end)
     |> Enum.map(&( &1 |> elem(0)))
+  end
+
+  def total_bags {0}, _ do
+    0
+  end
+
+
+  def total_bags {num, color}, map do
+    contents = map[color]
+    |> Enum.reduce(0, &(total_bags(&1,map) + &2  ))
+
+    num + (num * contents)
+  end
+
+  def total_bags color, map do
+    total_bags({1, color}, map) - 1 #don't count the top level bag
+  end
+
+  def solve do
+    bags = parse()
+
+    get_bags(["shiny gold"], bags)
+    |> MapSet.new
+    |> Enum.count
+    |> IO.puts
+
+    total_bags("shiny gold", bags)
+    |> IO.puts
   end
 end
 

@@ -21,6 +21,7 @@ defmodule Day9 do
       numbers
       |> Enum.reduce_while({0, []}, fn
         n, {x, l} when x + n == to_find -> {:halt, {:found, [l | [n]]}}
+        n, {x, _} when x + n > to_find -> {:halt, :too_big_lol}
         n, {x, l} -> {:cont, {n + x, [l | [n]]}}
       end)
 

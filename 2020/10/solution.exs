@@ -10,30 +10,39 @@ defmodule Day10 do
   def solve do
     input = parse("test")
 
-    {_, map} = find_adaptors(input, 0, %{1=> 0, 2=> 0, 3=>0})
+    {_, map} = find_adaptors(input, 0, %{1=> 0, 3=>0})
     IO.puts map[1] * map[3]
 
-    result = find_permutations input, 1
-    IO.puts result
+
+    r = to_steps([ 0 | input], [])
+    |> find_runs([1])
+
+    require IEx; IEx.pry
   end
 
-  def find_permutations([ _ | []], sum), do: sum
+  def to_steps([ _ | []], acc), do: Enum.reverse(acc)
+  def to_steps(input = [h | tail], acc) do
+    [next | _ ] = tail
+    to_steps tail, [next - h | acc]
+  end
 
-  def find_permutations [h | tail], sum do
-    permutes = tail
-    |> Enum.take(3)
-    |> Enum.map(fn
-      n when n == h+1 or n == h+3 -> 1
-      _ -> 0
-    end)
-    |> Enum.sum
+  def find_runs([ _ | []], acc), do: Enum.filter(acc, &(&1 > 1))
+  def find_runs(input, []), do: find_runs(input, [0])
+  def find_runs [h | list], acc = [run_length | tail] do
+    [next | _ ] = list
+    run_length = run_length || 0
 
-    find_permutations tail, permutes * sum
+    acc = case next do
+      1 when next == h -> [run_length + 1 | tail]
+      1 when next != h -> [ 1 | acc]
+      _ -> acc
+    end
+
+    find_runs list, acc
   end
 
   def find_adaptors([], current, differences), do:
     {current + 3, %{differences | 3 => differences[3] + 1 }}
-
   def find_adaptors([h | t], current, differences), do:
     find_adaptors t, h, %{differences | h - current => differences[h - current] + 1 }
 end

@@ -40,13 +40,48 @@ defmodule Grid do
     grid.cells[y][x]
   end
 
+  def neighbors(grid, x, y), do: neighbors(grid, x,y, &( get(&1,&2,&3) ))
+  def neighbors(grid, x, y, :not_self) do
+    iter = fn grid, i,j ->
+      if i == x and j == y, do: nil, else: Grid.get(grid, i,j)
+    end
+
+    neighbors(grid, x,y, iter)
+  end
+
+  def neighbors(grid, x, y, func) do
+    for i <- ( x-1..x+1 |> Enum.to_list), j <- (y-1..y+1 |> Enum.to_list), do:
+      func.(grid, i,j)
+  end
+
   def print(grid = %Grid{}) do
     Enum.each(grid.cells |> Map.values(), &(Map.values(&1) |> Enum.join(grid.sep) |> IO.puts()))
   end
 
   def line_to_row l do
-    l 
-    |> Enum.with_index 
+    l
+    |> Enum.with_index
     |> Enum.reduce( %{}, fn {v, i}, acc -> Map.put_new(acc, i, v) end)
+  end
+
+  def from_char_lists charlists do
+    charlists
+    |> Enum.map(&Grid.line_to_row/1)
+    |> Grid.line_to_row
+    |> Grid.new
+  end
+
+  def map grid, func do
+    Enum.reduce(0..grid.height-1, %{}, fn y, acc ->
+      Map.put(acc, y, Enum.reduce(0..grid.width-1, %{}, fn x, acc ->
+        Map.put(acc, x,func.(grid,x,y))
+      end))
+    end)
+    |> Grid.new
+  end
+
+  def values grid do
+    Enum.map(Map.values(grid.cells), &(Map.values(&1)))
+    |> List.flatten
   end
 end

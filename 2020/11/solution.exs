@@ -27,6 +27,7 @@ defmodule Day11 do
 
   def part2(input, count \\0 ) do
     m = Grid.map(input, &cell_map2/3)
+
     case Grid.values(m) |> Enum.count(&(&1 == "#")) do
       ^count -> count
       n -> part2(m, n)

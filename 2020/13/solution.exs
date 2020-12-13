@@ -11,6 +11,8 @@ defmodule Day13 do
     input = parse()
 
     IO.puts part1(input)
+
+    IO.puts part2(input)
   end
 
   def part1({timestamp, nums}) do
@@ -23,6 +25,24 @@ defmodule Day13 do
 
     time * bus
   end
+
+  def part2({_,buses}) do
+    input = buses
+    |> Enum.with_index
+    |> Enum.reject(&(elem(&1,0) == "x"))
+    |> Enum.map(&( {String.to_integer(elem(&1,0)), elem(&1,1)}  ))
+
+    [{bus, _} | tail] = input
+
+    {_, t} = Enum.reduce(tail,{bus, 0}, fn {bus, i},{inc,  t} ->
+      crm t, inc, i, bus
+    end)
+
+    IO.puts t
+  end
+
+  def crm(t, inc, offset, bus) when rem(t + offset, bus) == 0, do: {inc * bus, t}
+  def crm(t, inc, offset, bus), do: crm t + inc, inc, offset, bus
 end
 
 Day13.solve

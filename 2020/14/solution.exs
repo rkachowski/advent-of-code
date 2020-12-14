@@ -54,13 +54,7 @@ defmodule Day14 do
 
         addrs = Enum.reduce(floats, [base_addr], fn
           fl, [l | []] -> toggle_bits(l,fl)
-
-          fl, v ->
-            next = Enum.reduce(v, [], fn o, acc ->
-              acc ++ toggle_bits(o,fl)
-            end)
-
-            v ++ next
+          fl, v -> v ++ Enum.reduce(v,[],&( &2 ++ toggle_bits(&1, fl)))
         end)
         |> Enum.uniq
 

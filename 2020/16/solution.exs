@@ -35,13 +35,13 @@ defmodule Day16 do
   end
 
   def solve do
-    input = parse
+    input = parse()
 
     IO.puts part1(input)
     IO.puts part2(input)
   end
 
-  def part1 {rules, myticket, nearby} do
+  def part1 {rules, _, nearby} do
     ranges = rules
     |> Map.values
     |> List.flatten
@@ -88,7 +88,7 @@ defmodule Day16 do
   def find_possible_ticket_indices(input, value_map) do
     input
     |> Enum.reduce(%{}, fn {name, [r1, r2]}, map ->
-      possible_indexes = Enum.filter(value_map, fn {i, vals} ->
+      possible_indexes = Enum.filter(value_map, fn {_, vals} ->
         Enum.all?(vals, &( Enum.member?(r1, &1) or Enum.member?(r2, &1) ))
       end)
       |> Enum.map(&(elem(&1,0)))

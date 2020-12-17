@@ -32,7 +32,7 @@ defmodule Day17 do
   def conway(grid, neighbor_func) do
     grid
     |> Enum.reduce(%{}, fn coord, acc ->
-      Enum.reduce(neighbor_func.(coord), acc, fn coord, map -> updateneighbormap(map, coord) end)
+      Enum.reduce(neighbor_func.(coord), acc, &updateneighbormap(&2, &1))
     end)
     |> Enum.reduce(MapSet.new([]), fn
       {k, 2}, map ->
@@ -53,27 +53,23 @@ defmodule Day17 do
     end
   end
 
-  def neighbors3d(k = {x, y, z}) do
-    r =
-      for i <- (x - 1)..(x + 1),
-          j <- (y - 1)..(y + 1),
-          k <- (z - 1)..(z + 1),
-          into: MapSet.new(),
-          do: {i, j, k}
-
-    MapSet.delete(r, k)
+  def neighbors3d(coord = {x, y, z}) do
+    for i <- (x - 1)..(x + 1),
+        j <- (y - 1)..(y + 1),
+        k <- (z - 1)..(z + 1),
+        {i, j, k} != coord,
+        into: MapSet.new(),
+        do: {i, j, k}
   end
 
-  def neighbors4d(k = {x, y, z, w}) do
-    r =
-      for i <- (x - 1)..(x + 1),
-          j <- (y - 1)..(y + 1),
-          k <- (z - 1)..(z + 1),
-          l <- (w - 1)..(w + 1),
-          into: MapSet.new(),
-          do: {i, j, k, l}
-
-    MapSet.delete(r, k)
+  def neighbors4d(coord = {x, y, z, w}) do
+    for i <- (x - 1)..(x + 1),
+        j <- (y - 1)..(y + 1),
+        k <- (z - 1)..(z + 1),
+        l <- (w - 1)..(w + 1),
+        {i, j, k, l} != coord,
+        into: MapSet.new(),
+        do: {i, j, k, l}
   end
 end
 

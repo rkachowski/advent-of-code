@@ -71,6 +71,12 @@ defmodule Grid do
     |> Grid.new
   end
 
+  def from_str str do
+    str
+    |> Enum.map(&String.graphemes/1)
+    |> from_char_lists
+  end
+
   def map grid, func do
     Enum.reduce(0..grid.height-1, %{}, fn y, acc ->
       Map.put(acc, y, Enum.reduce(0..grid.width-1, %{}, fn x, acc ->
@@ -83,5 +89,18 @@ defmodule Grid do
   def values grid do
     Enum.map(Map.values(grid.cells), &(Map.values(&1)))
     |> List.flatten
+  end
+
+  def rotate grid do
+    Enum.map(Map.values(grid.cells), &Map.values/1)
+    |> List.flatten
+    |> Enum.with_index
+    |> Enum.reduce(%{}, fn {c, i}, map ->
+      index = grid.width - rem(i, grid.width)
+      Map.put(map, index, [c | Map.get(map, index,[])])
+    end)
+    |> Map.values
+    |> Enum.map(&Enum.reverse/1)
+    |> Enum.reduce(%{})
   end
 end

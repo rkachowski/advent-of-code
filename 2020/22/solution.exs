@@ -1,5 +1,3 @@
-require IEx
-
 defmodule Day22 do
   def parse(input \\ "input") do
     File.read(input)

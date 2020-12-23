@@ -8,15 +8,17 @@ defmodule Day10 do
   end
 
   def solve do
-    input = parse("test")
+    input = parse("input")
 
     {_, map} = find_adaptors(input, 0, %{1=> 0, 3=>0})
     IO.puts map[1] * map[3]
 
 
-    r = to_steps([ 0 | input], [])
+    to_steps([ 0 | input], [])
     |> find_runs([1])
-
+    |> Enum.map(&(find_ways(&1)))
+    |> Enum.reduce(1, &(&1 * &2))
+    |> IO.puts
     require IEx; IEx.pry
   end
 
@@ -40,6 +42,10 @@ defmodule Day10 do
 
     find_runs list, acc
   end
+
+  def find_ways(n) when n in [1,0], do: 1
+  def find_ways(2),do: 2
+  def find_ways(n), do: find_ways(n-1) + find_ways(n-2) + find_ways(n-3)
 
   def find_adaptors([], current, differences), do:
     {current + 3, %{differences | 3 => differences[3] + 1 }}

@@ -88,3 +88,5 @@ defmodule Day23 do
     if Enum.member?(add_into, current), do: current, else: find_destination(current - 1, add_into)
   end
 end
+
+Day23.solve

@@ -1,3 +1,4 @@
+require IEx
 defmodule Grid do
   defstruct cells: [], width: 0, height: 0, repeat_x: false, repeat_y: false, sep: ""
 
@@ -55,7 +56,7 @@ defmodule Grid do
   end
 
   def print(grid = %Grid{}) do
-    Enum.each(grid.cells |> Map.values(), &(Map.values(&1) |> Enum.join(grid.sep) |> IO.puts()))
+    Enum.each(values(grid), &( &1 |> Enum.join(grid.sep) |> IO.puts()))
   end
 
   def line_to_row l do
@@ -87,20 +88,44 @@ defmodule Grid do
   end
 
   def values grid do
-    Enum.map(Map.values(grid.cells), &(Map.values(&1)))
-    |> List.flatten
+    Enum.reduce(0..grid.height-1, [], fn y, acc ->
+      row = Enum.reduce(0..grid.width-1, [], fn x, acc ->
+        [Grid.get(grid, x, y) | acc]
+      end) |> Enum.reverse
+
+      [row | acc]
+    end) |> Enum.reverse
   end
 
   def rotate grid do
-    Enum.map(Map.values(grid.cells), &Map.values/1)
+    columns = grid
+    |> values
     |> List.flatten
     |> Enum.with_index
     |> Enum.reduce(%{}, fn {c, i}, map ->
       index = grid.width - rem(i, grid.width)
       Map.put(map, index, [c | Map.get(map, index,[])])
     end)
-    |> Map.values
+
+    {min,max} = Enum.min_max(Map.keys(columns))
+
+    Enum.map(min..max, &(columns[&1]))
     |> Enum.map(&Enum.reverse/1)
-    |> Enum.reduce(%{})
+    |> from_char_lists
+  end
+
+  def flip grid do
+    grid
+    |> values
+    |> Enum.map( &(&1 |> Enum.reverse))
+    |> from_char_lists
+  end
+
+  def remove_borders grid do
+    grid
+    |> values
+    |> Enum.slice(1, grid.height - 2 )
+    |> Enum.map(&(&1 |> Enum.slice(1..(grid.width-2))))
+    |> from_char_lists()
   end
 end

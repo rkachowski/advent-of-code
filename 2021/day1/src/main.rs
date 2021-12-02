@@ -8,16 +8,11 @@ fn main() {
 
     println!("part 1: {}", result);
 
-    let mut buf = Vec::new();
     let mut scans = Vec::new();
-    for i in input {
-        buf.push(i);
 
-        if buf.len() == 3 {
-            let scan = buf.iter().sum::<i32>();
-            scans.push(scan);
-            buf.remove(0);
-        } 
+    for w in input.windows(3) {
+        let sum = w.iter().sum();
+        scans.push(sum);
     }
 
     let result = calculate_result(&scans);
@@ -25,18 +20,9 @@ fn main() {
 }
 
 fn calculate_result(input: &Vec<i32>) -> i32 {
-    let mut prev = -1;
-    let mut result = 0;
-
-    for i in input {
-        if prev > 0 && i > &prev {
-            result = result + 1;
-        }
-
-        prev = *i;
-    }
-
-    result
+    input
+        .windows(2)
+        .fold(0, |acc, w| if w[1] > w[0] { acc + 1 } else { acc })
 }
 
 fn get_input() -> Result<Vec<i32>, Error> {

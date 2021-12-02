@@ -17,31 +17,33 @@ fn get_input() -> Result<Vec<String>, Error> {
 
 fn parse(input: (&str, i32)) -> (i32, i32) {
     let (direction, inc) = input;
-    
     match direction {
         "forward" => (inc, 0),
         "up" => (0, -inc),
-        "down"=> (0,  inc),
-        _ => (0,0)
+        "down" => (0, inc),
+        _ => (0, 0),
     }
 }
+
 fn main() {
     let input = get_input().unwrap();
     let steps = input
         .iter()
         .map(|s| s.split_whitespace().collect::<Vec<&str>>())
         .map(|splits| (splits[0], splits[1].parse::<i32>().unwrap()))
-        .collect::<Vec<(&str,i32)>>();
+        .collect::<Vec<(&str, i32)>>();
 
-    let mut position = (0,0);
+    let increments = steps.iter().map(|s| parse(*s)).collect::<Vec<(i32, i32)>>();
 
-    for step in steps {
-        let increment = parse(step);
-
-        position = (position.0 + increment.0, position.1 + increment.1);
-
-        println!("position: {:?}", position);
-    }
+    let position = increments
+        .iter()
+        .fold((0,0), |acc, inc| (acc.0 + inc.0, acc.1 + inc.1));
 
     println!("part1: {}", position.0 * position.1);
+
+    let position = increments
+        .iter()
+        .fold((0,0,0), |acc, inc| (acc.0 + inc.0, acc.1 + (inc.0 * acc.2), acc.2 + inc.1));
+
+    println!("part2: {}", position.0 * position.1);
 }

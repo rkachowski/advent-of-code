@@ -12,7 +12,6 @@ fn main() {
             if let Ok(value) = line {
                 if value.chars().count() < 1 {
                     groups.push(group.clone());
-                    println!("group {:?}", group);
                     group = Vec::new();
                 } else {
                     let val = value.parse().unwrap();
@@ -31,7 +30,7 @@ fn main() {
 
     let count = top[0] + top[1] + top[2];
 
-    println!("top 3 {}", count);
+    println!("part2 {}", count);
 }
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>

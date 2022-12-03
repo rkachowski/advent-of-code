@@ -25,15 +25,9 @@ defmodule Main do
         |> Enum.split(floor(length(backpack) / 2))
         |> Tuple.to_list()
 
-      duplicate_letter =
-        compartments
-        |> Enum.map(&MapSet.new/1)
-        |> Enum.reduce(fn e, acc ->
-          MapSet.intersection(e, acc)
-        end)
-        |> mapset_to_str()
-
-      duplicate_letter |> priority()
+      compartments
+      |> common_item()
+      |> priority()
     end)
     |> Enum.sum()
   end
@@ -41,18 +35,18 @@ defmodule Main do
   def part2(input) do
     groups = input |> Enum.chunk_every(3)
 
-    badges =
-      groups
-      |> Enum.map(fn group ->
-        group
-        |> Enum.map(&MapSet.new/1)
-        |> Enum.reduce(fn e, acc ->
-          MapSet.intersection(e, acc)
-        end)
-        |> mapset_to_str()
-      end)
+    badges = groups |> Enum.map(&common_item/1)
 
     badges |> Enum.map(&priority/1) |> Enum.sum()
+  end
+
+  def common_item(lists) do
+    lists
+    |> Enum.map(&MapSet.new/1)
+    |> Enum.reduce(fn e, acc ->
+      MapSet.intersection(e, acc)
+    end)
+    |> mapset_to_str()
   end
 
   def mapset_to_str(set), do: set |> MapSet.to_list() |> Enum.join()

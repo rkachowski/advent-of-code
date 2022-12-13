@@ -7,20 +7,31 @@ defmodule Main do
       |> Enum.map(&String.trim/1)
       |> parse_monkeys()
 
-    [a,b | _] =
-      0..19
+    monkeys |> do_rounds(20, &div(&1, 3)) |> IO.inspect()
+
+    pt2_div =
+      monkeys
+      |> Map.values()
+      |> Enum.map(fn monkey -> monkey[:test] end)
+      |> Enum.product()
+
+    monkeys |> do_rounds(10000, &rem(&1, pt2_div)) |> IO.inspect()
+  end
+
+  def do_rounds(monkeys, round_count, divider) do
+    [a, b | _] =
+      0..(round_count - 1)
       |> Enum.reduce(monkeys, fn _round_number, round ->
-        monkey_round(round)
+        monkey_round(round, divider)
       end)
       |> Enum.map(fn {_, %{inspected: i}} -> i end)
       |> Enum.sort()
       |> Enum.reverse()
 
-      IO.puts(a*b)
-    dbg()
+    a * b
   end
 
-  def monkey_round(monkeys) do
+  def monkey_round(monkeys, divider \\ 3) do
     0..(map_size(monkeys) - 1)
     |> Enum.reduce(monkeys, fn thrower, round ->
       monkey =
@@ -29,7 +40,7 @@ defmodule Main do
 
       items
       |> Enum.reduce(round, fn item, acc ->
-        worry = op(operation, item)
+        worry = inspect_item(operation, item, divider)
 
         to_receive =
           if rem(worry, test) == 0 do
@@ -40,15 +51,15 @@ defmodule Main do
 
         acc
         |> update_in([to_receive, :items], &(&1 ++ [worry]))
-        |> update_in([to_string(thrower), :inspected], &(&1 + 1))
+        |> update_in([monkey[:id], :inspected], &(&1 + 1))
       end)
-      |> put_in([to_string(thrower), :items], [])
+      |> put_in([monkey[:id], :items], [])
     end)
   end
 
-  def op(str, old) do
+  def inspect_item(str, old, divider) do
     {r, _} = Code.eval_string(str, old: old)
-    div(r, 3)
+    divider.(r)
   end
 
   def parse_monkeys(input) do
@@ -82,4 +93,4 @@ defmodule Main do
   end
 end
 
-Main.run()
+Main.run("input")

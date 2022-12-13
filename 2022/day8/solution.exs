@@ -1,10 +1,10 @@
 Code.require_file("grid.exs")
 
 defmodule Main do
-  def run() do
+  def run(file \\ "input") do
     grid =
       %{height: height, width: width} =
-      "input"
+      file
       |> File.read!()
       |> Grid.new()
       |> Grid.map(fn {k, v} -> {k, String.to_integer(v)} end)
@@ -23,8 +23,21 @@ defmodule Main do
       MapSet.union(rows, columns)
       |> MapSet.union(edge_coords(grid))
 
-    require IEx
-    IEx.pry()
+    IO.puts(MapSet.size(result))
+
+    result =
+      grid
+      |> Grid.every_position()
+      |> Task.async_stream(
+        fn position ->
+          up(grid, position) * down(grid, position) * left(grid, position) * right(grid, position)
+        end,
+        max_concurrency: 500
+      )
+      |> Enum.map(fn {:ok, result} -> result end)
+      |> Enum.max()
+
+    IO.puts(result)
   end
 
   def visible_row(grid = %{height: h, width: w}, row) do
@@ -95,6 +108,27 @@ defmodule Main do
       end
 
     MapSet.new(top_and_bottom ++ left_and_right)
+  end
+
+  def up(grid, position), do: visible_count(grid, position, {0, -1})
+  def down(grid, position), do: visible_count(grid, position, {0, 1})
+  def left(grid, position), do: visible_count(grid, position, {-1, 0})
+  def right(grid, position), do: visible_count(grid, position, {1, 0})
+
+  def visible_count(grid, position = {x, y}, {dx, dy}) do
+    start_cell = Grid.at(grid, position)
+
+    {x + dx, y + dy}
+    |> Stream.iterate(fn {x, y} ->
+      {x + dx, y + dy}
+    end)
+    |> Enum.reduce_while(0, fn next_point, vis ->
+      cond do
+        !Grid.inside(grid, next_point) -> {:halt, vis}
+        Grid.at(grid, next_point) >= start_cell -> {:halt, vis + 1}
+        true -> {:cont, vis + 1}
+      end
+    end)
   end
 end
 

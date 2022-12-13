@@ -30,9 +30,15 @@ defmodule Grid do
     %{grid | cells: Enum.into(cells, %{}, func)}
   end
 
-  def at(grid = %Grid{}, position = {x, y}), do: Map.get(grid.cells, position)
+  def at(grid = %Grid{}, position), do: Map.get(grid.cells, position)
 
-  def print(grid = %Grid{cells: cells, width: width, height: height}) do
+  def inside(%{width: width, height: height}, {x, y})
+      when x >= 0 and y >= 0 and x < width and y < height,
+      do: true
+
+  def inside(_, _), do: false
+
+  def print(%Grid{cells: cells, width: width, height: height}) do
     for y <- 0..height do
       for x <- 0..width do
         IO.write(:stdio, cells[{x, y}])
@@ -42,5 +48,9 @@ defmodule Grid do
     end
 
     :ok
+  end
+
+  def every_position(%{width: width, height: height}) do
+    for y <- 0..(height - 1), x <- 0..(width - 1), into: [], do: {x, y}
   end
 end

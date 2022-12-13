@@ -7,7 +7,7 @@ defmodule Main do
       |> Enum.map(&String.trim/1)
       |> parse_monkeys()
 
-    [a, b | _] =
+    [a,b | _] =
       0..19
       |> Enum.reduce(monkeys, fn _round_number, round ->
         monkey_round(round)
@@ -16,7 +16,7 @@ defmodule Main do
       |> Enum.sort()
       |> Enum.reverse()
 
-    IO.puts(a * b)
+      IO.puts(a*b)
     dbg()
   end
 

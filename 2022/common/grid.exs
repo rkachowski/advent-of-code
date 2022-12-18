@@ -1,6 +1,8 @@
 defmodule Grid do
   defstruct cells: %{}, width: nil, height: nil, bounds: %{}
 
+  def import(%Grid{cells: cells}), do: Grid.import(cells)
+
   def import(cells, default \\ ".") when is_map(cells) do
     bounds = cells |> Map.keys() |> bounding_box()
 
@@ -42,6 +44,14 @@ defmodule Grid do
 
   def map(grid = %{cells: cells}, func) do
     %{grid | cells: Enum.into(cells, %{}, func)}
+  end
+
+  def move(grid, {dx, dy}) do
+    grid
+    |> Grid.map(fn {{x, y}, v} ->
+      {{x + dx, y + dy}, v}
+    end)
+    |> Grid.import()
   end
 
   def at(grid = %Grid{}, position), do: Map.get(grid.cells, position)

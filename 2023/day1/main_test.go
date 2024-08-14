@@ -15,6 +15,8 @@ func TestFirstAndLastNumber(t *testing.T) {
 		want []string
 	}{
 		{"basic test", args{"1asdlkfjaslkdjfasljf2"}, []string{"1", "2"}},
+		{"repeat ", args{"1asd6kfj6slkdj9asljf"}, []string{"1", "9"}},
+		{"repeat ", args{"1asdlkfjaslkdjfasljf"}, []string{"1", "1"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

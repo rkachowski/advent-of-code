@@ -46,3 +46,23 @@ func TestParseFile(t *testing.T) {
 		})
 	}
 }
+
+func TestNumberLiteral(t *testing.T) {
+	type args struct {
+		line string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{"overlapping", args{"2zbxzsthreefivefhdbhvjjxv6btwonef"}, []string{"2", "1"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ExtractNumbers(tt.args.line); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractNumbers() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

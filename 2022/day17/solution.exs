@@ -13,7 +13,7 @@ defmodule Main do
     |> Enum.map(&Grid.new(&1))
   end
 
-  def move(rock, direction, map) do
+  def step(rock, direction, map) do
     dir =
       case direction do
         :down -> {0, -1}
@@ -21,7 +21,7 @@ defmodule Main do
         :right -> {1, 0}
       end
 
-    new_rock = move(rock, direction)
+    new_rock = Grid.move(rock, direction)
 
     case outcome(new_rock, map) do
       :invalid -> {:ok, rock}

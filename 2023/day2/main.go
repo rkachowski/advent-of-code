@@ -17,6 +17,7 @@ func main() {
 	input := parse("input")
 
 	step1(input)
+	step2(input)
 }
 
 type Round struct {
@@ -26,9 +27,42 @@ type Round struct {
 }
 
 func step1(input []string) {
+	games := parseGames(input)
+
+	valid := 0
+	for id, game := range games {
+		if !anyInvalid(game, part1Invalid) {
+			valid = valid + (id + 1)
+		}
+	}
+
+	fmt.Printf("valid %d\n", valid)
+}
+
+func step2(input []string) {
+	games := parseGames(input)
+
+	var maxes []Round
+	for _, game := range games {
+		maxes = append(maxes, maxGames(game))
+	}
+
+	var powers []int
+	for _, max := range maxes {
+		powers = append(powers, max.red*max.green*max.blue)
+	}
+
+	total := 0
+	for _, p := range powers {
+		total = total + p
+	}
+
+	fmt.Printf("Powers = %d", total)
+}
+
+func parseGames(input []string) [][]Round {
 	var games [][]Round
 	for _, line := range input {
-		//split on game header
 		cubeString := strings.Split(line, ":")[1]
 		roundsStrings := strings.Split(cubeString, ";")
 
@@ -43,15 +77,7 @@ func step1(input []string) {
 
 		games = append(games, rounds)
 	}
-
-	valid := 0
-	for id, game := range games {
-		if !anyInvalid(game, part1Invalid) {
-			valid = valid + (id + 1)
-		}
-	}
-
-	fmt.Printf("valid %d\n", valid)
+	return games
 }
 
 type RoundComparator func(Round) bool
@@ -63,6 +89,18 @@ func anyInvalid(rounds []Round, comp RoundComparator) bool {
 		}
 	}
 	return false
+}
+
+func maxGames(rounds []Round) Round {
+	maximum := Round{0, 0, 0}
+
+	for _, v := range rounds {
+		maximum.red = max(maximum.red, v.red)
+		maximum.green = max(maximum.green, v.green)
+		maximum.blue = max(maximum.blue, v.blue)
+	}
+
+	return maximum
 }
 
 func part1Invalid(round Round) bool {
@@ -107,6 +145,3 @@ func parse(path string) []string {
 
 	return lines
 }
-
-//TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
-// Also, you can try interactive lessons for GoLand by selecting 'Help | Learn IDE Features' from the main menu.

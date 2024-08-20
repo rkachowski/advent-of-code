@@ -29,7 +29,76 @@ func main() {
 	input := parse("input")
 
 	numbers := extractNumbers(input)
-	//symbols := extractSymbols(input)
+	part1(numbers, input)
+	part2(numbers, input)
+}
+
+func part2(numbers []Number, input []string) {
+	asteriskeses := extractAsterisks(input)
+
+	var gears [][]Number
+	for _, a := range asteriskeses {
+		aroundAsterisk := coordsForNumber(Number{start: a.start, line: a.line, end: a.start + 1, val: ""}, Coord{len(input[0]), len(input)})
+
+		var collisions []Number
+		for _, ast := range aroundAsterisk {
+			collision, found := collideNumber(numbers, ast)
+			if found {
+				collisions = append(collisions, collision)
+			}
+		}
+
+		collisions = deduplicate(collisions)
+
+		if len(collisions) == 2 {
+			gears = append(gears, collisions)
+		}
+	}
+
+	total := 0
+	for _, g := range gears {
+
+		first, _ := strconv.Atoi(g[0].val)
+		second, _ := strconv.Atoi(g[1].val)
+
+		total += first * second
+	}
+
+	fmt.Println(total)
+}
+
+func collideNumber(numbers []Number, coord Coord) (Number, bool) {
+
+	for _, n := range numbers {
+		if n.line == coord.y && (coord.x >= n.start && coord.x < n.end) {
+			return n, true
+		}
+	}
+
+	return Number{}, false
+}
+
+func deduplicate(numbers []Number) []Number {
+	uniqueNumbers := make(map[string]Number)
+	for _, num := range numbers {
+		// Generate a composite key using struct fields
+		key := strconv.Itoa(num.start) + "-" + strconv.Itoa(num.line) + "-" + strconv.Itoa(num.end) + "-" + num.val
+		// Add the struct to the map if it's not already present
+		if _, exists := uniqueNumbers[key]; !exists {
+			uniqueNumbers[key] = num
+		}
+	}
+
+	// Convert the map values back to a slice
+	result := make([]Number, 0, len(uniqueNumbers))
+	for _, num := range uniqueNumbers {
+		result = append(result, num)
+	}
+
+	return result
+}
+
+func part1(numbers []Number, input []string) {
 	var validNumbers []int
 	for _, number := range numbers {
 		if validNumber(number, input) {
@@ -85,7 +154,7 @@ func coordsForNumber(number Number, max Coord) []Coord {
 
 	return coords
 }
-func extractSymbols(input []string) []Symbol {
+func extractAsterisks(input []string) []Symbol {
 	var symbols []Symbol
 
 	for y, line := range input {
@@ -93,7 +162,7 @@ func extractSymbols(input []string) []Symbol {
 		for i := 0; i < len(line); i++ {
 			char := string(line[i])
 
-			symbol, _ := regexp.MatchString(`[^\w.]`, char)
+			symbol, _ := regexp.MatchString(`\*`, char)
 			if symbol {
 				newSymbol := Symbol{line: y, start: i, val: char}
 				symbols = append(symbols, newSymbol)

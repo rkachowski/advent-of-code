@@ -23,18 +23,43 @@ func main() {
 	games := formatGames(input)
 
 	part1(games)
+	part2(games)
+}
+
+func part2(games []Game) {
+	scores := make(map[int]int)
+
+	for i := 0; i < len(games); i++ {
+		scores[i] = 1
+	}
+
+	for i, game := range games {
+		for multiples := 0; multiples < scores[i]; multiples++ {
+			score := gameScore(game)
+			for j := i + 1; j < i+1+score; j++ {
+				scores[j] += 1
+			}
+		}
+	}
+
+	println(sum(scores))
+
+}
+
+func sum(s map[int]int) int {
+	total := 0
+	for _, num := range s {
+		total += num
+	}
+
+	return total
 }
 
 func part1(games []Game) {
 	total := 0
 
 	for _, game := range games {
-		gameTotal := 0
-		for _, number := range game.numbers {
-			if contains(game.winners, number) {
-				gameTotal++
-			}
-		}
+		gameTotal := gameScore(game)
 
 		if gameTotal > 0 {
 			total = total + int(math.Pow(float64(2), float64(gameTotal-1)))
@@ -42,6 +67,16 @@ func part1(games []Game) {
 	}
 
 	println(total)
+}
+
+func gameScore(game Game) int {
+	gameTotal := 0
+	for _, number := range game.numbers {
+		if contains(game.winners, number) {
+			gameTotal++
+		}
+	}
+	return gameTotal
 }
 
 func contains(s []int, e int) bool {

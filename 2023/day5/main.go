@@ -12,10 +12,20 @@ import (
 
 type Mapper struct {
 	name string
-	maps [][]int
+	maps []Transform
+}
+
+type Transform struct {
+	source      Range
+	destination int
 }
 
 type Seeds []int
+
+type Range struct {
+	start int
+	end   int
+}
 
 func main() {
 
@@ -23,6 +33,91 @@ func main() {
 	groups := extractGroups(input)
 	seeds, maps := parseGroupData(groups)
 
+	part1(seeds, maps)
+	//part2(seeds, maps)
+}
+
+//func part2(seeds Seeds, mappers []Mapper) {
+//	chunks := slices.Chunk(seeds, 2)
+//	var seedRanges []Range
+//	for chunk := range chunks {
+//		seedRange := Range{chunk[0], chunk[0] + chunk[1] - 1}
+//		seedRanges = append(seedRanges, seedRange)
+//	}
+//
+//	lowest := math.MaxInt
+//
+//	for _, seedRange := range seedRanges {
+//		collidableRanges := []Range{seedRange}
+//		for _, mapper := range mappers {
+//
+//			//collide each range with each map
+//			//iterate over each map in the mapper
+//			//remapped values don't get retried
+//			var newRanges []Range
+//			for _, transform := range mapper.maps {
+//				for _, collider := range collidableRanges {
+//					mapped, unmapped := CollideRangeWithMap(collider, transform)
+//					newRanges = append(newRanges, mapped...)
+//					collidableRanges = unmapped
+//				}
+//			}
+//
+//			collidableRanges = append(collidableRanges, newRanges...)
+//		}
+//
+//		for _, r := range collidableRanges {
+//			if r.start < lowest {
+//				lowest = r.start
+//			}
+//		}
+//	}
+//
+//	fmt.Printf("part2 : %d\n", lowest)
+//
+//}
+
+// return (remapped ranges), (unremapped ranges)
+func CollideRangeWithMap(ranger Range, mapper []int) ([]Range, []Range) {
+	//completely outside
+	if ranger.end < mapper[1] || ranger.start > mapper[1]+mapper[2]-1 {
+		return []Range{}, []Range{ranger}
+	}
+
+	//completely inside
+	if ranger.start >= mapper[1] && ranger.end <= mapper[1]+mapper[2]-1 {
+
+		newRange := Range{mapper[0] + ranger.start - mapper[1], mapper[0] + ranger.end - mapper[1] - 1}
+		return []Range{newRange}, []Range{}
+	}
+
+	//left occlusion
+	if ranger.start < mapper[1] && ranger.end > mapper[1] && ranger.end <= mapper[1]+mapper[2] {
+
+		newRange := Range{mapper[0], mapper[0] + (ranger.end - mapper[1])}
+		prevRange := Range{ranger.start, mapper[1]}
+
+		return []Range{newRange}, []Range{prevRange}
+	}
+
+	//right occlusion
+	if ranger.start >= mapper[1] && ranger.start < mapper[1]+mapper[2] && ranger.end > mapper[1]+mapper[2] {
+
+		newRange := Range{mapper[0] + (ranger.start - mapper[1]), mapper[0] + mapper[2]}
+		prevRange := Range{mapper[1] + mapper[2], ranger.end}
+
+		return []Range{newRange}, []Range{prevRange}
+	}
+
+	//full occlusion
+	if ranger.start <= mapper[1] && ranger.end >= mapper[1]+mapper[2]-1 {
+		return []Range{Range{mapper[0], mapper[0] + mapper[2] - 1}}, []Range{Range{ranger.start, mapper[1] - 1}, Range{mapper[1] + mapper[2], ranger.end}}
+	}
+
+	return []Range{}, []Range{ranger}
+}
+
+func part1(seeds Seeds, maps []Mapper) {
 	final := runSeeds(seeds, maps)
 
 	low := slices.Min(final)
@@ -32,7 +127,6 @@ func main() {
 func runSeeds(seeds Seeds, maps []Mapper) []int {
 	var final []int
 	for _, seed := range seeds {
-		//fmt.Printf("--- seed: %d\n", seed)
 		for _, m := range maps {
 			for _, mp := range m.maps {
 				result := mapVal(seed, mp)
@@ -41,7 +135,6 @@ func runSeeds(seeds Seeds, maps []Mapper) []int {
 					break
 				}
 			}
-			//fmt.Printf("%s: %d\n", m.name, seed)
 		}
 
 		final = append(final, seed)
@@ -49,9 +142,9 @@ func runSeeds(seeds Seeds, maps []Mapper) []int {
 	return final
 }
 
-func mapVal(seed int, mp []int) int {
-	if seed >= mp[1] && seed < (mp[1]+mp[2]) {
-		return seed - mp[1] + mp[0]
+func mapVal(seed int, mp Transform) int {
+	if seed >= mp.source.start && seed <= (mp.source.end) {
+		return seed - mp.source.start + mp.destination
 	}
 	return seed
 }
@@ -69,7 +162,7 @@ func parseGroupData(groups [][]string) (Seeds, []Mapper) {
 
 	var outputMaps []Mapper
 	for _, m := range mapGroups {
-		group := Mapper{maps: make([][]int, len(m)-1)}
+		group := Mapper{maps: make([]Transform, len(m)-1)}
 
 		group.name = strings.Split(m[0], " ")[0]
 
@@ -80,7 +173,7 @@ func parseGroupData(groups [][]string) (Seeds, []Mapper) {
 				nums[i], _ = strconv.Atoi(str)
 			}
 
-			group.maps[s] = nums
+			group.maps[s] = Transform{source: Range{nums[1], nums[1] + nums[2] - 1}, destination: nums[0]}
 		}
 
 		outputMaps = append(outputMaps, group)

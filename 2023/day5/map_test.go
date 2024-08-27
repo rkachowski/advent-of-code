@@ -1,88 +1,57 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"slices"
+	"testing"
+)
 
-func TestCollideRangeWithMapLeftOcclusion(t *testing.T) {
-	testRange := Range{0, 10}
-	testMap := []int{20, 5, 5}
-
-	mapped, unmapped := CollideRangeWithMap(testRange, testMap)
-
-	if len(mapped) != 1 {
-		t.Fatalf("should be one remapped range")
+func TestFailures(t *testing.T) {
+	var tests = []struct {
+		testRange            Range
+		testMapper           Mapper
+		expectedOutputLength int
+		expectedOutput       []Range
+	}{
+		{Range{1, 10}, makeMapper(5, 7, 20, "testmap"), 3, makeOutput(1, 4, 8, 10, 20, 22)},
+		{Range{1, 10}, makeMapper(5, 10, 20, "testmap"), 2, makeOutput(1, 4, 20, 25)},
+		{Range{1, 10}, makeMapper(0, 5, 20, "testmap"), 2, makeOutput(6, 10, 21, 25)},
+		{Range{1, 10}, makeMapper(11, 15, 20, "testmap"), 1, makeOutput()},
+		{Range{1, 10}, makeMapper(-5, -1, 20, "testmap"), 1, makeOutput()},
 	}
+	for i, tt := range tests {
+		testname := fmt.Sprintf("Test Collisions %d", i)
+		t.Run(testname, func(t *testing.T) {
+			output := tt.testMapper.CollideSeedRange(tt.testRange)
+			if len(output) != tt.expectedOutputLength {
+				t.Errorf("got %v, expected length %d", output, tt.expectedOutputLength)
+			}
 
-	if !(mapped[0].start == 20 && mapped[0].end == 25) {
-		t.Fatalf("didn't remap new map correctly")
-	}
-
-	if unmapped[0].start != 0 || unmapped[0].end != 5 {
-		t.Fatalf("didn't adjust previous map correctly")
-	}
-}
-
-func TestCollideRangeWithMapInsideOcclusion(t *testing.T) {
-	testRange := Range{8, 9}
-	testMap := []int{20, 5, 5}
-
-	mapped, unmapped := CollideRangeWithMap(testRange, testMap)
-
-	if len(mapped) != 1 {
-		t.Fatalf("should be one remapped range")
-	}
-
-	if len(unmapped) != 0 {
-		t.Fatalf("should be no unmapped ranges")
-	}
-
-	if !(mapped[0].start == 23 && mapped[0].end == 24) {
-		t.Fatalf("didn't remap new map correctly - %v", mapped[0])
+			if len(tt.expectedOutput) > 0 {
+				for i, expected := range tt.expectedOutput {
+					if output[i] != expected {
+						t.Errorf("got %v, expected %v", output, tt.expectedOutput)
+					}
+				}
+			}
+		})
 	}
 }
 
-func TestCollideRangeWithMapRightOcclusion(t *testing.T) {
-	testRange := Range{0, 15}
-	testMap := []int{20, 5, 5}
-
-	mapped, unmapped := CollideRangeWithMap(testRange, testMap)
-
-	if len(mapped) != 1 {
-		t.Fatalf("should be one remapped range - was %d", len(mapped))
-	}
-
-	if !(mapped[0].start == 20 && mapped[0].end == 24) {
-		t.Fatalf("didn't remap new map correctly")
-	}
-
-	if unmapped[0].start != 0 || unmapped[0].end != 4 {
-		t.Fatalf("didn't adjust previous map correctly")
-	}
-	if unmapped[1].start != 10 || unmapped[1].end != 15 {
-		t.Fatalf("didn't adjust previous map correctly")
-	}
+func makeRange(start, end int) Range {
+	return Range{start, end}
 }
 
-func TestCollideRangeWithMapFullOcclusion(t *testing.T) {
-	testRange := Range{0, 15}
-	testMap := []int{20, 5, 5}
+func makeMapper(start, end, destination int, name string) Mapper {
+	return Mapper{name, []Transform{Transform{makeRange(start, end), destination}}}
+}
 
-	mapped, unmapped := CollideRangeWithMap(testRange, testMap)
-
-	if len(mapped) != 1 {
-		t.Fatalf("should be one remapped range - was %d", len(mapped))
-	}
-	if len(unmapped) != 2 {
-		t.Fatalf("should be 2 unmapped ranges with endpoints adjusted")
+func makeOutput(vals ...int) []Range {
+	chunks := slices.Chunk(vals, 2)
+	var output []Range
+	for chunk := range chunks {
+		output = append(output, makeRange(chunk[0], chunk[1]))
 	}
 
-	if !(mapped[0].start == 20 && mapped[0].end == 24) {
-		t.Fatalf("didn't remap new map correctly %v", mapped[0])
-	}
-
-	if unmapped[0].start != 0 || unmapped[0].end != 4 {
-		t.Fatalf("didn't adjust previous map correctly")
-	}
-	if unmapped[1].start != 10 || unmapped[1].end != 15 {
-		t.Fatalf("didn't adjust previous map correctly")
-	}
+	return output
 }

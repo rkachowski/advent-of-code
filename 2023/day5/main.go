@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"slices"
@@ -34,87 +35,119 @@ func main() {
 	seeds, maps := parseGroupData(groups)
 
 	part1(seeds, maps)
-	//part2(seeds, maps)
+	part2(seeds, maps)
 }
 
-//func part2(seeds Seeds, mappers []Mapper) {
-//	chunks := slices.Chunk(seeds, 2)
-//	var seedRanges []Range
-//	for chunk := range chunks {
-//		seedRange := Range{chunk[0], chunk[0] + chunk[1] - 1}
-//		seedRanges = append(seedRanges, seedRange)
-//	}
-//
-//	lowest := math.MaxInt
-//
-//	for _, seedRange := range seedRanges {
-//		collidableRanges := []Range{seedRange}
-//		for _, mapper := range mappers {
-//
-//			//collide each range with each map
-//			//iterate over each map in the mapper
-//			//remapped values don't get retried
-//			var newRanges []Range
-//			for _, transform := range mapper.maps {
-//				for _, collider := range collidableRanges {
-//					mapped, unmapped := CollideRangeWithMap(collider, transform)
-//					newRanges = append(newRanges, mapped...)
-//					collidableRanges = unmapped
-//				}
-//			}
-//
-//			collidableRanges = append(collidableRanges, newRanges...)
-//		}
-//
-//		for _, r := range collidableRanges {
-//			if r.start < lowest {
-//				lowest = r.start
-//			}
-//		}
-//	}
-//
-//	fmt.Printf("part2 : %d\n", lowest)
-//
-//}
+func (t Transform) Transform(i int) int {
+	return i - t.source.start + t.destination
+}
 
-// return (remapped ranges), (unremapped ranges)
-func CollideRangeWithMap(ranger Range, mapper []int) ([]Range, []Range) {
+func (r Range) Contains(i int) bool {
+	if i >= r.start && i <= r.end {
+		return true
+	}
+
+	return false
+}
+
+// return (tranformed, untransformed) slices of ranges
+func (t Transform) CollideWithRange(r Range) ([]Range, []Range) {
 	//completely outside
-	if ranger.end < mapper[1] || ranger.start > mapper[1]+mapper[2]-1 {
-		return []Range{}, []Range{ranger}
+	if r.end < t.source.start || r.start > t.source.end {
+		return []Range{}, []Range{r}
 	}
 
 	//completely inside
-	if ranger.start >= mapper[1] && ranger.end <= mapper[1]+mapper[2]-1 {
-
-		newRange := Range{mapper[0] + ranger.start - mapper[1], mapper[0] + ranger.end - mapper[1] - 1}
+	if t.source.Contains(r.start) && t.source.Contains(r.end) {
+		newRange := Range{t.Transform(r.start), t.Transform(r.end)}
 		return []Range{newRange}, []Range{}
 	}
 
 	//left occlusion
-	if ranger.start < mapper[1] && ranger.end > mapper[1] && ranger.end <= mapper[1]+mapper[2] {
-
-		newRange := Range{mapper[0], mapper[0] + (ranger.end - mapper[1])}
-		prevRange := Range{ranger.start, mapper[1]}
+	if !t.source.Contains(r.start) && t.source.Contains(r.end) {
+		newRange := Range{t.Transform(t.source.start), t.Transform(r.end)}
+		prevRange := Range{r.start, t.source.start - 1}
 
 		return []Range{newRange}, []Range{prevRange}
 	}
 
 	//right occlusion
-	if ranger.start >= mapper[1] && ranger.start < mapper[1]+mapper[2] && ranger.end > mapper[1]+mapper[2] {
-
-		newRange := Range{mapper[0] + (ranger.start - mapper[1]), mapper[0] + mapper[2]}
-		prevRange := Range{mapper[1] + mapper[2], ranger.end}
+	if t.source.Contains(r.start) && !t.source.Contains(r.end) {
+		newRange := Range{t.Transform(r.start), t.Transform(t.source.end)}
+		prevRange := Range{t.source.end + 1, r.end}
 
 		return []Range{newRange}, []Range{prevRange}
 	}
 
 	//full occlusion
-	if ranger.start <= mapper[1] && ranger.end >= mapper[1]+mapper[2]-1 {
-		return []Range{Range{mapper[0], mapper[0] + mapper[2] - 1}}, []Range{Range{ranger.start, mapper[1] - 1}, Range{mapper[1] + mapper[2], ranger.end}}
+	if r.Contains(t.source.start) && r.Contains(t.source.end) {
+		prevRange := Range{r.start, t.source.start - 1}
+		postRange := Range{t.source.end + 1, r.end}
+		newRange := Range{t.Transform(t.source.start), t.Transform(t.source.end)}
+
+		return []Range{newRange}, []Range{prevRange, postRange}
 	}
 
-	return []Range{}, []Range{ranger}
+	return []Range{}, []Range{r}
+}
+
+func (m Mapper) CollideSeedRange(r Range) []Range {
+	toProcess := []Range{r}
+	var newRanges []Range
+
+	for _, transform := range m.maps {
+		var nextIter []Range
+		for _, collider := range toProcess {
+			//fmt.Printf("range %v transform %v\n", collider, transform)
+			mapped, unmapped := transform.CollideWithRange(collider)
+			//fmt.Printf("mapped %v unmapped %v\n", mapped, unmapped)
+			if len(mapped) > 0 {
+				newRanges = append(newRanges, mapped...)
+				nextIter = append(nextIter, unmapped...)
+			} else {
+				nextIter = append(nextIter, unmapped...)
+			}
+		}
+
+		toProcess = nextIter
+	}
+
+	result := append(toProcess, newRanges...)
+	return result
+}
+
+func part2(seeds Seeds, mappers []Mapper) {
+	chunks := slices.Chunk(seeds, 2)
+	var seedRanges []Range
+	for chunk := range chunks {
+		seedRange := Range{chunk[0], chunk[0] + chunk[1] - 1}
+		seedRanges = append(seedRanges, seedRange)
+	}
+
+	lowest := math.MaxInt
+
+	for _, seedRange := range seedRanges {
+		toProcess := []Range{seedRange}
+		for _, mapper := range mappers {
+			var output []Range
+			//fmt.Printf("Mapping %s -> %v\n", mapper.name, toProcess)
+			for _, p := range toProcess {
+				result := mapper.CollideSeedRange(p)
+				output = append(output, result...)
+			}
+			//fmt.Printf("Output %v\n", output)
+			toProcess = output
+		}
+
+		for _, r := range toProcess {
+			if r.start < lowest {
+				lowest = r.start
+			}
+		}
+	}
+
+	fmt.Printf("part2 : %d\n", lowest)
+
 }
 
 func part1(seeds Seeds, maps []Mapper) {
@@ -143,8 +176,8 @@ func runSeeds(seeds Seeds, maps []Mapper) []int {
 }
 
 func mapVal(seed int, mp Transform) int {
-	if seed >= mp.source.start && seed <= (mp.source.end) {
-		return seed - mp.source.start + mp.destination
+	if mp.source.Contains(seed) {
+		return mp.Transform(seed)
 	}
 	return seed
 }

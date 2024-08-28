@@ -7,14 +7,13 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
-
-//TIP To run your code, right-click the code and select <b>Run</b>. Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
 
 func main() {
 	input := parse("input")
 	part1(input)
+	part2(input)
 }
 
 func part1(input [][]int) {
@@ -41,6 +40,39 @@ func part1(input [][]int) {
 	}
 
 	fmt.Println(total)
+}
+
+func part2(input [][]int) {
+	time := joinInts(input[0])
+	distance := joinInts(input[1])
+
+	winners := 0
+	for t := 0; t < time; t++ {
+		if t*(time-t) > distance {
+			winners++
+		}
+	}
+
+	fmt.Printf("%d winning combinations with %d %d\n", winners, time, distance)
+}
+
+func joinInts(input []int) int {
+	var strNumbers []string
+	for _, num := range input {
+		strNumbers = append(strNumbers, strconv.Itoa(num))
+	}
+
+	// Join all string elements to form a single string
+	joinedString := strings.Join(strNumbers, "")
+
+	// Convert the joined string back to an integer
+	result, err := strconv.Atoi(joinedString)
+
+	if err != nil {
+		log.Fatalf("Error converting %s to int", joinedString)
+	}
+
+	return result
 }
 
 func parse(j string) [][]int {
@@ -76,6 +108,3 @@ func parse(j string) [][]int {
 
 	return numbers
 }
-
-//TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
-// Also, you can try interactive lessons for GoLand by selecting 'Help | Learn IDE Features' from the main menu.

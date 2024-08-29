@@ -9,13 +9,84 @@ import (
 	"strings"
 )
 
-//TIP To run your code, right-click the code and select <b>Run</b>. Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
-
 func main() {
 	instructions, moduleMap := parse("input")
 
 	part1(instructions, moduleMap)
+	part2(instructions, moduleMap)
+}
+
+func part2(instructions []string, moduleMap map[string][]string) {
+	var locations []string
+
+	for location, _ := range moduleMap {
+		if location[2] == 'A' {
+			locations = append(locations, location)
+		}
+	}
+
+	index := 0
+	steps := 0
+
+	periods := make([]int, len(locations))
+	for true {
+		instr := instructions[index]
+
+		for i := 0; i < len(locations); i++ {
+			location := locations[i]
+			nextOptions := moduleMap[location]
+			if instr == "L" {
+				locations[i] = nextOptions[0]
+			} else if instr == "R" {
+				locations[i] = nextOptions[1]
+			}
+
+			if locations[i][2] == 'Z' {
+				periods[i] = steps + 1
+			}
+		}
+		steps++
+		index++
+
+		if index == len(instructions) {
+			index = 0
+		}
+
+		stopIterating := true
+		for _, val := range periods {
+			if val == 0 {
+				stopIterating = false
+			}
+		}
+
+		if stopIterating {
+			break
+		}
+	}
+
+	result := LCM(periods[0], periods[1], periods[2:]...)
+
+	fmt.Println(result)
+}
+
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
 }
 
 func part1(instructions []string, moduleMap map[string][]string) {
@@ -69,7 +140,6 @@ func parse(s string) ([]string, map[string][]string) {
 	for _, mod := range lines[2:] {
 		matches := re.FindStringSubmatch(mod)
 
-		fmt.Printf("Matches %#v\n", matches)
 		modMap[matches[1]] = []string{matches[2], matches[3]}
 	}
 

@@ -29,7 +29,7 @@ func part2(instructions []string, moduleMap map[string][]string) {
 	steps := 0
 
 	periods := make([]int, len(locations))
-	for true {
+	for {
 		instr := instructions[index]
 
 		for i := 0; i < len(locations); i++ {

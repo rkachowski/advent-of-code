@@ -12,16 +12,23 @@ import (
 func main() {
 	input := parse("input")
 	part1(input)
+	part2(input)
 }
 
 func part1(input [][]int) {
 	var nexts []int
 	for _, line := range input {
-		//for _, d := range line {
-		//	fmt.Printf("%d ", d)
-		//}
-		//fmt.Printf("\n")
-		next := runLine(line)
+		next := runLine(line, false)
+		nexts = append(nexts, next)
+	}
+
+	fmt.Printf("%d ", sum(nexts))
+
+}
+func part2(input [][]int) {
+	var nexts []int
+	for _, line := range input {
+		next := runLine(line, true)
 		nexts = append(nexts, next)
 	}
 
@@ -37,7 +44,7 @@ func sum(line []int) int {
 	return sum
 
 }
-func runLine(line []int) int {
+func runLine(line []int, part2 bool) int {
 	var diffs []int
 	for i := 0; i < len(line)-1; i++ {
 		cur := line[i]
@@ -45,19 +52,22 @@ func runLine(line []int) int {
 
 		diffs = append(diffs, next-cur)
 	}
-
-	//for _, d := range diffs {
-	//	fmt.Printf("%d ", d)
-	//}
-	//fmt.Printf("\n")
-
-	if allZero(diffs) {
-		return line[len(line)-1]
+	if part2 {
+		if allZero(diffs) {
+			return line[0]
+		} else {
+			prevVal := runLine(diffs, part2)
+			nextVal := line[0]
+			return nextVal - prevVal
+		}
 	} else {
-		prevVal := runLine(diffs)
-		nextVal := line[len(line)-1]
-		//fmt.Printf("next val : %d prev val : %d \n ", nextVal, prevVal)
-		return nextVal + prevVal
+		if allZero(diffs) {
+			return line[len(line)-1]
+		} else {
+			prevVal := runLine(diffs, part2)
+			nextVal := line[len(line)-1]
+			return nextVal + prevVal
+		}
 	}
 }
 

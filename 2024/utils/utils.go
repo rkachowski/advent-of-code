@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"bufio"
+	"os"
+)
+
 func ParseFile(filename string) []string {
 	file, err := os.Open(filename)
 

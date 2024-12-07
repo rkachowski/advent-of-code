@@ -34,7 +34,7 @@ func returnNil[T any](x, y int) *T{
 
 func (g *Grid[T]) Get(x, y int)(*T) {
 	if (x < 0 || x >= g.Width || y < 0 || y >= g.Height) {
-		return g.external(x, y)
+		return nil
 	}
 	return &g.cells[y][x]
 }

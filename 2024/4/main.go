@@ -7,10 +7,31 @@ import (
 )
 
 func main() {
-	input := utils.ParseFile("input")
+	input := utils.ParseFile("test2")
 	grid := utils.GridFromInput(input)
 
 	countXmas(grid)
+	countMas(grid)
+}
+
+func countMas(grid *utils.Grid[string]) {
+	mas := 0
+	for x := 0; x < grid.Width; x++ {
+		log.Printf("x: %v", x)
+		for y := 0; y < grid.Height; y++ {
+			log.Printf("y: %v", y)
+			c := *grid.Get(x, y)
+			if c == "M" {
+				m1 := grid.Get(x+2, y)
+				m2 := grid.Get(x, y+2)
+				if (m1 != nil && *m1 == "M") || (m2 != nil && *m2 == "M") {
+					mas += 1
+				}
+			}
+		}
+	}
+
+	log.Printf("mas: %d", mas)
 }
 
 func countXmas(grid *utils.Grid[string]) {
@@ -20,9 +41,7 @@ func countXmas(grid *utils.Grid[string]) {
 		for y := 0; y < grid.Height; y++ {
 			c := *grid.Get(x, y)
 			if c == "X" {
-				//get all directions
-				xmases := getXmases(x, y, grid)
-				xmas += len(xmases)
+				xmas += getXmases(x, y, grid)
 			}
 		}
 	}
@@ -30,31 +49,25 @@ func countXmas(grid *utils.Grid[string]) {
 	log.Printf("xmas: %d", xmas)
 }
 
-func getXmases(x int, y int, grid *utils.Grid[string]) []string {
+func getXmases(x int, y int, grid *utils.Grid[string]) int {
 	dirs := directions(x, y)
-	var potentialXmases [][]string
+	xmases := 0
 	for _, dir := range dirs {
-		var line []string
+		line := make([]string, 4)
 		for _, coord := range dir {
 			cell := grid.Get(coord[0], coord[1])
 
 			if cell != nil {
-				line = append(line, *cell)
+				line = append(line, string(*cell))
 			}
 		}
 
-		potentialXmases = append(potentialXmases, line)
-	}
-
-	var actualXmas []string
-	for _, line := range potentialXmases {
-		str := strings.Join(line, "")
-		if str == "XMAS" {
-			actualXmas = append(actualXmas, str)
+		if strings.Join(line, "") == "XMAS" {
+			xmases += 1
 		}
 	}
 
-	return actualXmas
+	return xmases
 }
 
 func directions(x, y int) [][][]int {

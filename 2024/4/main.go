@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := utils.ParseFile("test2")
+	input := utils.ParseFile("input")
 	grid := utils.GridFromInput(input)
 
 	countXmas(grid)
@@ -17,21 +17,62 @@ func main() {
 func countMas(grid *utils.Grid[string]) {
 	mas := 0
 	for x := 0; x < grid.Width; x++ {
-		log.Printf("x: %v", x)
 		for y := 0; y < grid.Height; y++ {
-			log.Printf("y: %v", y)
 			c := *grid.Get(x, y)
 			if c == "M" {
 				m1 := grid.Get(x+2, y)
 				m2 := grid.Get(x, y+2)
-				if (m1 != nil && *m1 == "M") || (m2 != nil && *m2 == "M") {
-					mas += 1
+				if m1 != nil && *m1 == "M" {
+					//up
+					a := grid.Get(x+1, y-1)
+					s1 := grid.Get(x, y-2)
+					s2 := grid.Get(x+2, y-2)
+
+					if validAS(a, s1, s2) {
+						mas++
+					}
+
+					//down
+					a = grid.Get(x+1, y+1)
+					s1 = grid.Get(x, y+2)
+					s2 = grid.Get(x+2, y+2)
+
+					if validAS(a, s1, s2) {
+						mas++
+					}
+				}
+
+				if m2 != nil && *m2 == "M" {
+					//left
+					a := grid.Get(x-1, y+1)
+					s1 := grid.Get(x-2, y)
+					s2 := grid.Get(x-2, y+2)
+
+					if validAS(a, s1, s2) {
+						mas++
+					}
+
+					//right
+					a = grid.Get(x+1, y+1)
+					s1 = grid.Get(x+2, y)
+					s2 = grid.Get(x+2, y+2)
+
+					if validAS(a, s1, s2) {
+						mas++
+					}
 				}
 			}
 		}
 	}
 
 	log.Printf("mas: %d", mas)
+}
+
+func validAS(a *string, s1 *string, s2 *string) bool {
+	if a != nil && *a == "A" && s1 != nil && *s1 == "S" && s2 != nil && *s2 == "S" {
+		return true
+	}
+	return false
 }
 
 func countXmas(grid *utils.Grid[string]) {

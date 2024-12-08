@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/rkachowski/advent-of-code/2024/utils"
+	"log"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -20,6 +22,41 @@ func main() {
 	sum := sumMiddleValues(validUpdates)
 	fmt.Println(sum)
 
+	//part 2
+	var reordered [][]string
+	for _, update := range invalidUpdates {
+		var validRules [][]string
+
+		vals := map[string]bool{}
+		for _, n := range update {
+			vals[n] = true
+		}
+
+		for _, rule := range rules {
+			if vals[rule[0]] && vals[rule[1]] {
+				validRules = append(validRules, rule)
+			}
+		}
+
+		// sort the update with the valid rules as a sorting operator
+		sort.Slice(update, func(i, j int) bool {
+			l := update[i]
+			r := update[j]
+
+			for _, rule := range validRules {
+				if l == rule[0] && r == rule[1] {
+					return true
+				}
+			}
+
+			return false
+		})
+
+		reordered = append(reordered, update)
+	}
+
+	pt2 := sumMiddleValues(reordered)
+	log.Println(pt2)
 }
 
 func sumMiddleValues(validUpdates [][]string) int {

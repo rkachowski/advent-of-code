@@ -21,7 +21,7 @@ func ParseFile(filename string) []string {
 	return lines
 }
 
-type Grid[T any] struct {
+type Grid[T comparable] struct {
 	cells  [][]T
 	Width  int
 	Height int
@@ -43,6 +43,12 @@ func (g *Grid[T]) Put(x, y int,val  T) {
 	g.cells[y][x] = val
 }
 
+func (g *Grid[T]) Inside(x, y int) bool {
+	if x < 0 || x >= g.Width || y < 0 || y >= g.Height {
+		return false
+	}
+	return true
+}
 func (g *Grid[T]) Print() {
 	for _, row := range g.cells {
 		for _, cell := range row {
@@ -52,7 +58,19 @@ func (g *Grid[T]) Print() {
 	}
 }
 
-func NewGrid[T any](width, height int) *Grid[T] {
+func (g *Grid[T]) FindIndex(item T)(int, int) {
+	for y, column := range g.cells {
+		for x, val := range column {
+			if val == item {
+				return x, y
+			}
+		}
+	}
+
+	return -1, -1
+}
+
+func NewGrid[T comparable](width, height int) *Grid[T] {
 	cells := make([][]T, width)
 	for i := range cells {
 		cells[i] = make([]T, height)

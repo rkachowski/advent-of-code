@@ -8,6 +8,46 @@ import (
 	"strings"
 )
 
+type StateSpaceGenerator struct {
+	positions int
+	states    int
+	current   []int
+	done      bool
+}
+
+func NewStateSpaceGenerator(positions, states int) *StateSpaceGenerator {
+	return &StateSpaceGenerator{
+		positions: positions,
+		states:    states,
+		current:   make([]int, positions),
+		done:      false,
+	}
+}
+
+func (gen *StateSpaceGenerator) Next() ([]int, bool) {
+	if gen.done {
+		return nil, false
+	}
+
+	// Return a copy of the current combination
+	result := make([]int, len(gen.current))
+	copy(result, gen.current)
+
+	// Generate the next combination
+	for i := len(gen.current) - 1; i >= 0; i-- {
+		gen.current[i]++
+		if gen.current[i] < gen.states {
+			break
+		}
+		gen.current[i] = 0
+		if i == 0 {
+			gen.done = true
+		}
+	}
+
+	return result, true
+}
+
 func main() {
 	input := utils.ParseFile("input")
 
@@ -15,10 +55,21 @@ func main() {
 
 	values = extractInput(input)
 
+	total := calcTotal(values, isPossiblePart1)
+
+	log.Printf("Total possibles part 1: %v", total)
+
+	total = calcTotal(values, isPossiblePart2)
+	log.Printf("Total possibles part 2: %v", total)
+}
+
+type Validator func(targetVal uint64, calibs []int) bool
+
+func calcTotal(values map[uint64][]int, validator Validator) uint64 {
 	possibles := map[uint64][]int{}
 
 	for v, calibs := range values {
-		if isPossiblePart1(v, calibs) {
+		if validator(v, calibs) {
 			possibles[v] = calibs
 		}
 	}
@@ -27,8 +78,7 @@ func main() {
 	for v, _ := range possibles {
 		total += v
 	}
-
-	log.Printf("Total possibles: %v", total)
+	return total
 }
 
 func extractInput(input []string) map[uint64][]int {
@@ -75,6 +125,40 @@ func isPossiblePart1(targetVal uint64, calibs []int) bool {
 			return true
 		}
 		i++
+	}
+
+	return false
+}
+
+func isPossiblePart2(targetVal uint64, calibs []int) bool {
+
+	state := NewStateSpaceGenerator(len(calibs), 3)
+	for !state.done {
+		total := uint64(0)
+		for j, calib := range calibs {
+			if j == 0 {
+				total = uint64(calib)
+				continue
+			}
+
+			switch state.current[j] {
+			case 0:
+				total += uint64(calib)
+			case 1:
+				total *= uint64(calib)
+			case 2:
+				l := strconv.Itoa(int(total))
+				r := strconv.Itoa(calib)
+				combined, _ := strconv.Atoi(l + r)
+				total = uint64(combined)
+			}
+
+		}
+
+		if total == targetVal {
+			return true
+		}
+		state.Next()
 	}
 
 	return false

@@ -53,7 +53,7 @@ func (g Grid) Set(x int, y int, val string) {
 	g.cells[y][x] = val
 }
 
-func (g Grid) Neighbors(of Coord) []Cell {
+func (g Grid) ConnectedPipeNeighbors(of Coord) []Cell {
 	var result []Cell
 	//left
 	if of.x > 0 {
@@ -92,11 +92,16 @@ func (g Grid) Neighbors(of Coord) []Cell {
 }
 
 func main() {
-	input := parse("input")
-	input.Print()
-
+	file := "test3"
+	input := parse(file)
 	part1 := IterateGrid(input)
+	input.Print()
 	fmt.Println(part1)
+
+	input = parse(file)
+	innerTiles := FindInside(input)
+	input.Print()
+	fmt.Println(innerTiles)
 
 }
 
@@ -110,6 +115,126 @@ func ToCoords(cells []Cell) []Coord {
 	return coords
 }
 
+func AllCoordsInCells(cells []Cell, coords []Coord) bool {
+	coordMap := make(map[Coord]struct{})
+
+	for _, cell := range cells {
+		coordMap[cell.coord] = struct{}{}
+	}
+
+	for _, c := range coords {
+		if _, exists := coordMap[c]; !exists {
+			return false
+		}
+	}
+
+	return true
+}
+
+func ReplaceStart(grid Grid, start Coord) Grid {
+
+	neighbours := grid.ConnectedPipeNeighbors(start)
+
+	if len(neighbours) != 2 {
+		log.Fatalf("what")
+	}
+
+	up := []Coord{{x: start.x, y: start.y - 1}}
+	down := []Coord{{x: start.x, y: start.y + 1}}
+	left := []Coord{{x: start.x - 1, y: start.y}}
+	right := []Coord{{x: start.x + 1, y: start.y}}
+
+	return grid
+}
+
+func (g Grid) Width() int {
+	return len(g.cells[0])
+}
+
+func (g Grid) Height() int {
+	return len(g.cells)
+}
+
+func FindInside(grid Grid) int {
+	inside := 0
+	for y := 0; y < grid.Height(); y++ {
+		for x := 0; x < grid.Width(); x++ {
+			//for each cell
+			contents := grid.Cell(x, y)
+
+			if IsPipe(contents) {
+				continue
+			}
+
+			walls := 0
+			previousVert := "#"
+
+			for curX := x; curX < grid.Width()-1; curX++ {
+				current := grid.Cell(curX, y)
+				next := grid.Cell(curX+1, y)
+
+				if IsEndOfPipe(current, next, previousVert) {
+					walls++
+				}
+
+				if VerticalPipe(current) {
+					previousVert = current
+				}
+			}
+
+			if walls > 0 && walls%2 == 1 {
+				grid.Set(x, y, "I")
+				inside++
+				fmt.Print(walls)
+			} else {
+				fmt.Print(contents)
+			}
+		}
+		fmt.Print("\n")
+	}
+
+	return inside
+}
+
+func IsEndOfPipe(current string, next string, prevVert string) bool {
+	if prevVert == "F" && current == "7" {
+		return false
+	}
+	if prevVert == "F" && current == "J" {
+		return true
+	}
+
+	if prevVert == "L" && current == "J" {
+		return false
+	}
+
+	if prevVert == "L" && current == "7" {
+		return true
+	}
+
+	if VerticalPipe(current) && next != "-" {
+		return true
+	}
+
+	return false
+}
+
+func VerticalPipe(p string) bool {
+	if p == "|" || p == "F" || p == "J" || p == "7" || p == "L" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsPipe(p string) bool {
+	if p == "|" || p == "F" || p == "J" || p == "7" || p == "L" || p == "-" || p == "S" {
+		return true
+	} else {
+		return false
+	}
+}
+
 func IterateGrid(grid Grid) int {
 	begin := FindStart(grid)
 
@@ -120,7 +245,7 @@ func IterateGrid(grid Grid) int {
 		var newCoords []Coord
 		for _, coord := range toCheck {
 			grid.Set(coord.x, coord.y, strconv.Itoa(steps))
-			neigbors := grid.Neighbors(coord)
+			neighbors := grid.ConnectedPipeNeighbors(coord)
 			newCoords = append(newCoords, ToCoords(neigbors)...)
 		}
 
